@@ -19,12 +19,24 @@ public class Weapon : MonoBehaviour
     private float _fireRate = 0.1f;
     [SerializeField]
     private float _fireTimer;
+    [Header("Efeitos")]
     [SerializeField]
     private ParticleSystem _fireEffect;
+    [SerializeField]
+    private GameObject _hitEffect;
+    [SerializeField]
+    private GameObject _bulletImpact;
     public Transform FirePoint;
+    [SerializeField]
+    private Transform InstantiatedsObjects;
     private bool _isReloading;
+    [Header("Audio")]
+    [SerializeField]
+    private AudioClip _shootSound;
+    private AudioSource _audioSource;
     void Start()
     {
+        _audioSource = GetComponent<AudioSource>();
         _currentBullets = _totalBullets;
         anim = GetComponent<Animator>();
     }
@@ -59,10 +71,15 @@ public class Weapon : MonoBehaviour
         RaycastHit hit;
         if(Physics.Raycast(FirePoint.position, FirePoint.transform.forward, out hit, _range))
         {
+            GameObject hitParticle = Instantiate(_hitEffect, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal), InstantiatedsObjects);
+            GameObject bullet = Instantiate(_bulletImpact, hit.point, Quaternion.FromToRotation(Vector3.forward, hit.normal), InstantiatedsObjects);
 
+            Destroy(hitParticle, 1f);
+            Destroy(bullet, 5f);
         }
         anim.CrossFadeInFixedTime("Fire", 0.02f);
         _fireEffect.Play();
+        PlayShootSound();
         _currentBullets--;
         _fireTimer = 0f;
     }
@@ -88,5 +105,9 @@ public class Weapon : MonoBehaviour
 
         _bulletsLeft -= bulletsToDeduct;
         _currentBullets += bulletsToDeduct;
+    }
+    void PlayShootSound()
+    {
+        _audioSource.PlayOneShot(_shootSound);
     }
 }
