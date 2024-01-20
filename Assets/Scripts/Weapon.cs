@@ -34,21 +34,45 @@ public class Weapon : MonoBehaviour
     [SerializeField]
     private AudioClip _shootSound;
     private AudioSource _audioSource;
+    [Header("Aim")]
+    private Vector3 _originalPos;
+    [SerializeField]
+    private Vector3 _aimPos;
+    [SerializeField]
+    private float _aimSpeed;
+    public enum ShootMode
+    {
+        Auto,
+        Semi
+    }
+    public ShootMode shootMode;
+    private bool shootInput;
     void Start()
     {
         _audioSource = GetComponent<AudioSource>();
         _currentBullets = _totalBullets;
         anim = GetComponent<Animator>();
+        _originalPos = transform.localPosition;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetButton("Fire1"))
+
+        switch (shootMode)
+        {
+            case ShootMode.Auto:
+                shootInput = Input.GetButton("Fire1");
+                break;
+            case ShootMode.Semi:
+                shootInput = Input.GetButtonDown("Fire1");
+                break;
+        }
+        if (shootInput) 
         {
             if (_currentBullets > 0)
                 Fire();
-            else if (_bulletsLeft > 0)
+            else
                 DoReload();
         }
         if (_fireTimer < _fireRate)
@@ -62,6 +86,7 @@ public class Weapon : MonoBehaviour
                 DoReload();
             }
         }
+        ToAim();
     }
     private void Fire()
     {
@@ -93,6 +118,17 @@ public class Weapon : MonoBehaviour
         if (_isReloading)
             return;
         anim.CrossFadeInFixedTime("Reload", 0.02f);
+    }
+    public void ToAim()
+    {
+        if(Input.GetButton("Fire2") && !_isReloading)
+        {
+            transform.localPosition = Vector3.Lerp(transform.localPosition, _aimPos, Time.deltaTime * _aimSpeed);
+        }
+        else
+        {
+            transform.localPosition = Vector3.Lerp(transform.localPosition, _originalPos, Time.deltaTime * _aimSpeed);
+        }
     }
     public void Reload()
     {

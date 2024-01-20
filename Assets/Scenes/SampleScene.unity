@@ -370,7 +370,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1431151410}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.329}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1697264427}
@@ -531,6 +531,22 @@ PrefabInstance:
       propertyPath: FirePoint
       value: 
       objectReference: {fileID: 1431151411}
+    - target: {fileID: 5025536794576752789, guid: 3cd467b7f57242b47a2da0205f3a74ae, type: 3}
+      propertyPath: _aimPos.x
+      value: -0.145
+      objectReference: {fileID: 0}
+    - target: {fileID: 5025536794576752789, guid: 3cd467b7f57242b47a2da0205f3a74ae, type: 3}
+      propertyPath: _aimPos.y
+      value: -1.51
+      objectReference: {fileID: 0}
+    - target: {fileID: 5025536794576752789, guid: 3cd467b7f57242b47a2da0205f3a74ae, type: 3}
+      propertyPath: _aimSpeed
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 5025536794576752789, guid: 3cd467b7f57242b47a2da0205f3a74ae, type: 3}
+      propertyPath: shootMode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5025536794576752789, guid: 3cd467b7f57242b47a2da0205f3a74ae, type: 3}
       propertyPath: _hitEffect
       value: 
