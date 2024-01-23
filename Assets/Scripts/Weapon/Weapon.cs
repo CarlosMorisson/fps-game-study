@@ -13,6 +13,8 @@ public class Weapon : MonoBehaviour
     private int _bulletsLeft=100;
     [SerializeField]
     private int _currentBullets;
+    [SerializeField]
+    private int _damage;
     //
     private Animator anim;
     [SerializeField]
@@ -27,8 +29,6 @@ public class Weapon : MonoBehaviour
     [SerializeField]
     private GameObject _bulletImpact;
     public Transform FirePoint;
-    [SerializeField]
-    private Transform InstantiatedsObjects;
     private bool _isReloading;
     [Header("Audio")]
     [SerializeField]
@@ -96,11 +96,14 @@ public class Weapon : MonoBehaviour
         RaycastHit hit;
         if(Physics.Raycast(FirePoint.position, FirePoint.transform.forward, out hit, _range))
         {
-            GameObject hitParticle = Instantiate(_hitEffect, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal), InstantiatedsObjects);
-            GameObject bullet = Instantiate(_bulletImpact, hit.point, Quaternion.FromToRotation(Vector3.forward, hit.normal), InstantiatedsObjects);
-
+            GameObject hitParticle = Instantiate(_hitEffect, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
+            GameObject bullet = Instantiate(_bulletImpact, hit.point, Quaternion.FromToRotation(Vector3.forward, hit.normal));
+            //
+            bullet.transform.SetParent(hit.transform);
             Destroy(hitParticle, 1f);
             Destroy(bullet, 5f);
+            if (hit.transform.GetComponent<ObjectHealth>())
+                hit.transform.GetComponent<ObjectHealth>().ApplyDamage(_damage);
         }
         anim.CrossFadeInFixedTime("Fire", 0.02f);
         _fireEffect.Play();
