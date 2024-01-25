@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using TMPro;
 public class Weapon : MonoBehaviour
 {
     [Header("Bullets and Fire")]
@@ -15,6 +15,8 @@ public class Weapon : MonoBehaviour
     private int _currentBullets;
     [SerializeField]
     private int _damage;
+    [SerializeField]
+    private float _sprayShoot;
     //
     private Animator anim;
     [SerializeField]
@@ -40,6 +42,9 @@ public class Weapon : MonoBehaviour
     private Vector3 _aimPos;
     [SerializeField]
     private float _aimSpeed;
+    [Header("UI Components")]
+    [SerializeField]
+    private TextMeshProUGUI _bulletText;
     public enum ShootMode
     {
         Auto,
@@ -53,6 +58,7 @@ public class Weapon : MonoBehaviour
         _currentBullets = _totalBullets;
         anim = GetComponent<Animator>();
         _originalPos = transform.localPosition;
+        UpdateTextAmmo();
     }
 
     // Update is called once per frame
@@ -94,7 +100,9 @@ public class Weapon : MonoBehaviour
             return;
         
         RaycastHit hit;
-        if(Physics.Raycast(FirePoint.position, FirePoint.transform.forward, out hit, _range))
+        Vector3 shootDirection = FirePoint.transform.forward;
+        shootDirection = shootDirection + FirePoint.TransformDirection(new Vector3(Random.Range(-_sprayShoot, _sprayShoot), Random.Range(-_sprayShoot, _sprayShoot)));
+        if(Physics.Raycast(FirePoint.position, shootDirection, out hit, _range))
         {
             GameObject hitParticle = Instantiate(_hitEffect, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
             GameObject bullet = Instantiate(_bulletImpact, hit.point, Quaternion.FromToRotation(Vector3.forward, hit.normal));
@@ -108,6 +116,7 @@ public class Weapon : MonoBehaviour
         anim.CrossFadeInFixedTime("Fire", 0.02f);
         _fireEffect.Play();
         PlayShootSound();
+        UpdateTextAmmo();
         _currentBullets--;
         _fireTimer = 0f;
     }
@@ -144,9 +153,14 @@ public class Weapon : MonoBehaviour
 
         _bulletsLeft -= bulletsToDeduct;
         _currentBullets += bulletsToDeduct;
+        UpdateTextAmmo();
     }
     void PlayShootSound()
     {
         _audioSource.PlayOneShot(_shootSound);
+    }
+    void UpdateTextAmmo()
+    {
+        _bulletText.text = _currentBullets + " / " + _bulletsLeft;
     }
 }
