@@ -5,10 +5,10 @@ using UnityEngine;
 public class ObjectHealth : MonoBehaviour
 {
     [SerializeField]
-    private int _health = 100;
+    private float _health = 100;
     [SerializeField]
     private ParticleSystem _destroyParticle;
-    public void ApplyDamage(int damage)
+    public void ApplyDamage(float damage)
     {
         _health -= damage;
         if (_health <= 0)

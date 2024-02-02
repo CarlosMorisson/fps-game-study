@@ -14,7 +14,7 @@ public class Weapon : MonoBehaviour
     [SerializeField]
     private int _currentBullets;
     [SerializeField]
-    private int _damage;
+    private float _damage;
     [SerializeField]
     private float _sprayShoot;
     //
@@ -112,6 +112,10 @@ public class Weapon : MonoBehaviour
             Destroy(bullet, 5f);
             if (hit.transform.GetComponent<ObjectHealth>())
                 hit.transform.GetComponent<ObjectHealth>().ApplyDamage(_damage);
+            if (hit.transform.CompareTag("Foot"))
+            {
+                hit.transform.GetComponent<EnemieMember>().MemberDamage(_damage);
+            }
         }
         anim.CrossFadeInFixedTime("Fire", 0.02f);
         _fireEffect.Play();
@@ -153,7 +157,7 @@ public class Weapon : MonoBehaviour
 
         _bulletsLeft -= bulletsToDeduct;
         _currentBullets += bulletsToDeduct;
-        UpdateTextAmmo();
+        UpdateTextAmmo();   
     }
     void PlayShootSound()
     {
