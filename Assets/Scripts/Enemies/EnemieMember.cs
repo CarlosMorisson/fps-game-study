@@ -19,4 +19,5 @@ public class EnemieMember : MonoBehaviour
         }
         Enemie.instance.ReceiveDamage(damage);
     }
+
 }
