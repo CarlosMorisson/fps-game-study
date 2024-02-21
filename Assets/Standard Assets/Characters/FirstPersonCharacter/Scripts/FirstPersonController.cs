@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using Random = UnityEngine.Random;
-
+using Photon.Pun;
 namespace UnityStandardAssets.Characters.FirstPerson
 {
     [RequireComponent(typeof (CharacterController))]
@@ -41,46 +41,54 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private float m_NextStep;
         private bool m_Jumping;
         private AudioSource m_AudioSource;
-
+        PhotonView view;
         // Use this for initialization
         private void Start()
         {
-            m_CharacterController = GetComponent<CharacterController>();
-            m_Camera = Camera.main;
-            m_OriginalCameraPosition = m_Camera.transform.localPosition;
-            m_FovKick.Setup(m_Camera);
-            m_HeadBob.Setup(m_Camera, m_StepInterval);
-            m_StepCycle = 0f;
-            m_NextStep = m_StepCycle/2f;
-            m_Jumping = false;
-            m_AudioSource = GetComponent<AudioSource>();
-			m_MouseLook.Init(transform , m_Camera.transform);
+            view = GetComponent<PhotonView>();
+            if (view.IsMine)
+            {
+                m_CharacterController = GetComponent<CharacterController>();
+                m_Camera = Camera.main;
+                m_OriginalCameraPosition = m_Camera.transform.localPosition;
+                m_FovKick.Setup(m_Camera);
+                m_HeadBob.Setup(m_Camera, m_StepInterval);
+                m_StepCycle = 0f;
+                m_NextStep = m_StepCycle / 2f;
+                m_Jumping = false;
+                m_AudioSource = GetComponent<AudioSource>();
+                m_MouseLook.Init(transform, m_Camera.transform);
+            }
+            
         }
 
 
         // Update is called once per frame
         private void Update()
         {
-            RotateView();
-            // the jump state needs to read here to make sure it is not missed
-            if (!m_Jump)
+            if (view.IsMine)
             {
-                m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
-            }
+                RotateView();
+                // the jump state needs to read here to make sure it is not missed
+                if (!m_Jump)
+                {
+                    m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
+                }
 
-            if (!m_PreviouslyGrounded && m_CharacterController.isGrounded)
-            {
-                StartCoroutine(m_JumpBob.DoBobCycle());
-                PlayLandingSound();
-                m_MoveDir.y = 0f;
-                m_Jumping = false;
-            }
-            if (!m_CharacterController.isGrounded && !m_Jumping && m_PreviouslyGrounded)
-            {
-                m_MoveDir.y = 0f;
-            }
+                if (!m_PreviouslyGrounded && m_CharacterController.isGrounded)
+                {
+                    StartCoroutine(m_JumpBob.DoBobCycle());
+                    PlayLandingSound();
+                    m_MoveDir.y = 0f;
+                    m_Jumping = false;
+                }
+                if (!m_CharacterController.isGrounded && !m_Jumping && m_PreviouslyGrounded)
+                {
+                    m_MoveDir.y = 0f;
+                }
 
-            m_PreviouslyGrounded = m_CharacterController.isGrounded;
+                m_PreviouslyGrounded = m_CharacterController.isGrounded;
+            }
         }
 
 
@@ -94,52 +102,55 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void FixedUpdate()
         {
-            float speed;
-            GetInput(out speed);
-            Vector3 desiredMove;
-            // always move along the camera forward as it is the direction that it being aimed at
-            if (CrossPlatformInputManager.GetButton("Horizontal") || CrossPlatformInputManager.GetButton("Vertical"))
+            if (view.IsMine)
             {
-                desiredMove = transform.forward * m_Input.y + transform.right * m_Input.x;
-            }
-            else
-            {
-                desiredMove = Vector3.zero*0;
-            }
-                
-
-            // get a normal for the surface that is being touched to move along it
-            RaycastHit hitInfo;
-            Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
-                               m_CharacterController.height/2f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
-            desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
-
-            m_MoveDir.x = desiredMove.x*speed;
-            m_MoveDir.z = desiredMove.z*speed;
-
-
-            if (m_CharacterController.isGrounded)
-            {
-                m_MoveDir.y = -m_StickToGroundForce;
-
-                if (m_Jump)
+                float speed;
+                GetInput(out speed);
+                Vector3 desiredMove;
+                // always move along the camera forward as it is the direction that it being aimed at
+                if (CrossPlatformInputManager.GetButton("Horizontal") || CrossPlatformInputManager.GetButton("Vertical"))
                 {
-                    m_MoveDir.y = m_JumpSpeed;
-                    PlayJumpSound();
-                    m_Jump = false;
-                    m_Jumping = true;
+                    desiredMove = transform.forward * m_Input.y + transform.right * m_Input.x;
                 }
-            }
-            else
-            {
-                m_MoveDir += Physics.gravity*m_GravityMultiplier*Time.fixedDeltaTime;
-            }
-            m_CollisionFlags = m_CharacterController.Move(m_MoveDir*Time.fixedDeltaTime);
+                else
+                {
+                    desiredMove = Vector3.zero * 0;
+                }
 
-            ProgressStepCycle(speed);
-            UpdateCameraPosition(speed);
 
-            m_MouseLook.UpdateCursorLock();
+                // get a normal for the surface that is being touched to move along it
+                RaycastHit hitInfo;
+                Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
+                                   m_CharacterController.height / 2f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+                desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
+
+                m_MoveDir.x = desiredMove.x * speed;
+                m_MoveDir.z = desiredMove.z * speed;
+
+
+                if (m_CharacterController.isGrounded)
+                {
+                    m_MoveDir.y = -m_StickToGroundForce;
+
+                    if (m_Jump)
+                    {
+                        m_MoveDir.y = m_JumpSpeed;
+                        PlayJumpSound();
+                        m_Jump = false;
+                        m_Jumping = true;
+                    }
+                }
+                else
+                {
+                    m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;
+                }
+                m_CollisionFlags = m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
+
+                ProgressStepCycle(speed);
+                UpdateCameraPosition(speed);
+
+                m_MouseLook.UpdateCursorLock();
+            }   
         }
 
 

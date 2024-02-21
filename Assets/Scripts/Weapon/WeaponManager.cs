@@ -1,37 +1,43 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using Photon.Pun;
 public class WeaponManager : MonoBehaviour
 {
     public GameObject[] weapons;
     private int index;
     public float switchDelay = 1f;
     private bool isSwitching;
+    PhotonView view;
     void Start()
     {
         InitializeWeapons();
+        view = GetComponent<PhotonView>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetAxis("Mouse ScrollWheel") > 0 && !isSwitching)
+        if (view.IsMine)
         {
-            index++;
-            if (index >= weapons.Length)
+            if (Input.GetAxis("Mouse ScrollWheel") > 0 && !isSwitching)
             {
-                index = 0;
+                index++;
+                if (index >= weapons.Length)
+                {
+                    index = 0;
+                }
+                StartCoroutine(switchWeaponDelay(index));
             }
-            StartCoroutine(switchWeaponDelay(index));
-        }else if(Input.GetAxis("Mouse ScrollWheel") < 0 && !isSwitching)
-        {
-            index--;
-            if (index <0)
+            else if (Input.GetAxis("Mouse ScrollWheel") < 0 && !isSwitching)
             {
-                index = weapons.Length - 1 ;
+                index--;
+                if (index < 0)
+                {
+                    index = weapons.Length - 1;
+                }
+                StartCoroutine(switchWeaponDelay(index));
             }
-            StartCoroutine(switchWeaponDelay(index));
         }
     }
     IEnumerator switchWeaponDelay(int nIndex)

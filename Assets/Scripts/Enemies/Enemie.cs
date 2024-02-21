@@ -14,7 +14,8 @@ public class Enemie : MonoBehaviour
     void Start()
     {
         instance = this;
-        ActiveRagdoll();
+        DeactiveRagdoll();
+        Agent.speed = Speed;
 
 
     }
@@ -22,7 +23,6 @@ public class Enemie : MonoBehaviour
     public void ReceiveDamage(float damage)
     {
         Life -= damage;
-        DeactiveRagdoll();
     }
     public void ActiveRagdoll()
     {
@@ -31,6 +31,8 @@ public class Enemie : MonoBehaviour
             RagDollComponents[i].useGravity = true;
             RagDollComponents[i].isKinematic = false;
         }
+        Speed = 0;
+        Agent.speed = Speed;
     }
     public void DeactiveRagdoll()
     {

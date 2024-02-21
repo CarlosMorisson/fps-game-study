@@ -2,9 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using Photon.Pun;
 public class Weapon : MonoBehaviour
 {
     [Header("Bullets and Fire")]
+    [SerializeField]
+    [Range(0, 10000)]
+    private float _hitForce;
     [SerializeField]
     private float _range = 100f;
     [SerializeField]
@@ -45,6 +49,7 @@ public class Weapon : MonoBehaviour
     [Header("UI Components")]
     [SerializeField]
     private TextMeshProUGUI _bulletText;
+    public PhotonView view;
     public enum ShootMode
     {
         Auto,
@@ -54,45 +59,52 @@ public class Weapon : MonoBehaviour
     private bool shootInput;
     void Start()
     {
-        _audioSource = GetComponent<AudioSource>();
-        _currentBullets = _totalBullets;
-        anim = GetComponent<Animator>();
-        _originalPos = transform.localPosition;
-        UpdateTextAmmo();
+        if (view.IsMine)
+        {
+            _audioSource = GetComponent<AudioSource>();
+            _currentBullets = _totalBullets;
+            anim = GetComponent<Animator>();
+            _originalPos = transform.localPosition;
+            UpdateTextAmmo();
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-
-        switch (shootMode)
+        Debug.Log(view);
+        if (view.IsMine)
         {
-            case ShootMode.Auto:
-                shootInput = Input.GetButton("Fire1");
-                break;
-            case ShootMode.Semi:
-                shootInput = Input.GetButtonDown("Fire1");
-                break;
-        }
-        if (shootInput) 
-        {
-            if (_currentBullets > 0)
-                Fire();
-            else
-                DoReload();
-        }
-        if (_fireTimer < _fireRate)
-        {
-            _fireTimer += Time.deltaTime;
-        }
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            if(_currentBullets<_totalBullets && _bulletsLeft > 0)
+            switch (shootMode)
             {
-                DoReload();
+                case ShootMode.Auto:
+                    shootInput = Input.GetButton("Fire1");
+                    break;
+                case ShootMode.Semi:
+                    shootInput = Input.GetButtonDown("Fire1");
+                    break;
             }
+            if (shootInput)
+            {
+                if (_currentBullets > 0)
+                    Fire();
+                else
+                    DoReload();
+            }
+            if (_fireTimer < _fireRate)
+            {
+                _fireTimer += Time.deltaTime;
+            }
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                if (_currentBullets < _totalBullets && _bulletsLeft > 0)
+                {
+                    DoReload();
+                }
+            }
+            ToAim();
         }
-        ToAim();
+        
     }
     private void Fire()
     {
@@ -114,20 +126,27 @@ public class Weapon : MonoBehaviour
                 hit.transform.GetComponent<ObjectHealth>().ApplyDamage(_damage);
             if (hit.transform.CompareTag("Foot"))
             {
-                hit.transform.GetComponent<EnemieMember>().MemberDamage(_damage);
+                hit.transform.GetComponent<EnemieMember>().MemberDamage(_damage, -hit.normal);
+            }
+            if (hit.transform.GetComponent<Rigidbody>() != null)
+            {
+                hit.transform.GetComponent<Rigidbody>().AddForce(-hit.normal * _hitForce);
             }
         }
         anim.CrossFadeInFixedTime("Fire", 0.02f);
         _fireEffect.Play();
-        PlayShootSound();
+        PlayShootSound();   
         UpdateTextAmmo();
         _currentBullets--;
         _fireTimer = 0f;
     }
     private void FixedUpdate()
     {
-        AnimatorStateInfo info = anim.GetCurrentAnimatorStateInfo(0);
-        _isReloading = info.IsName("Reload");
+        if (view.IsMine)
+        {
+            AnimatorStateInfo info = anim.GetCurrentAnimatorStateInfo(0);
+            _isReloading = info.IsName("Reload");
+        }
     }
     private void DoReload()
     {
